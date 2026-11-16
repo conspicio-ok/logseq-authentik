@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Logseq
+Exec=/home/conspicio/repos/logseq-authentik/static/dist/Logseq-linux-x86_64-2.0.2.AppImage --ozone-platform=x11 --disable-gpu %U
+Icon=/home/conspicio/repos/logseq-authentik/static/icon.png
+Terminal=false
+Categories=Office;
+MimeType=x-scheme-handler/logseq;
+StartupWMClass=Logseq
