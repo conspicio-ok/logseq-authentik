@@ -120,8 +120,8 @@
                      (ui/focus-element "search-in-page-input"))))
 
   (safe-api-call "loginCallback"
-                 (fn [code]
-                   (user/login-callback code)))
+                 (fn [data]
+                   (user/login-callback (bean/->clj data))))
 
   (listen-for-deeplink! "quickCapture"
                       (fn [args]

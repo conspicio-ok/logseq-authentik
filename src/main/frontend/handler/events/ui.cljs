@@ -500,7 +500,7 @@
   (state/set-state! [:ui/loading? :login] false)
   (async/go
     (let [session (state/get-state :auth/graph-session)
-          result (async/<! (user-handler/<user-info user-handler/remoteapi))]
+          result (some-> (state/get-auth-id-token) user-handler/parse-jwt)]
       (when (and session (= session (state/get-state :auth/graph-session)) (map? result))
         (state/set-user-info! result)
         (when-let [uid (user-handler/user-uuid)]

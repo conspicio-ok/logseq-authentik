@@ -25,6 +25,7 @@
             [electron.i18n :as i18n]
             [electron.keychain :as keychain]
             [electron.logger :as logger]
+            [electron.oidc :as oidc]
             [electron.plugin :as plugin]
             [electron.server :as server]
             [electron.shell :as shell]
@@ -583,6 +584,13 @@
 
 (defmethod handle :keychain/delete-e2ee-password [_window [_ key]]
   (keychain/<delete-password! key))
+
+(defmethod handle :oidc/login [^js win _]
+  (oidc/start-login! win)
+  nil)
+
+(defmethod handle :oidc/refresh [_window [_ refresh-token]]
+  (oidc/<refresh refresh-token))
 
 (defmethod handle :default [args]
   (logger/error "Error: no ipc handler for:" args))

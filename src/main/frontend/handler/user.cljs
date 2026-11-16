@@ -5,6 +5,7 @@
             [cljs-time.coerce :as tc]
             [cljs-time.core :as t]
             [cljs.core.async :as async :refer [<! go timeout]]
+            [clojure.core.async.interop :refer [p->c]]
             [clojure.set :as set]
             [clojure.string :as string]
             [electron.ipc :as ipc]
@@ -184,10 +185,12 @@
 (defn- <refresh-tokens
   "return refreshed id-token, access-token"
   [refresh-token]
-  (http/post (str "https://" config/OAUTH-DOMAIN "/oauth2/token")
-             {:form-params {:grant_type "refresh_token"
-                            :client_id config/COGNITO-CLIENT-ID
-                            :refresh_token refresh-token}}))
+  (if (util/electron?)
+    (p->c (ipc/ipc :oidc/refresh refresh-token))
+    (http/post config/OAUTH-TOKEN-URL
+               {:form-params {:grant_type "refresh_token"
+                              :client_id config/COGNITO-CLIENT-ID
+                              :refresh_token refresh-token}})))
 
 (defn <refresh-id-token&access-token
   "Refresh id-token and access-token"
@@ -228,8 +231,11 @@
           (notification/show! (t :account/refresh-token-warning) :warning true)
 
           :else                         ; ok
-          (when (and (:id_token (:body resp)) (:access_token (:body resp)))
-            (set-tokens! (:id_token (:body resp)) (:access_token (:body resp)))))))))
+          (let [{:keys [id_token access_token refresh_token]} (:body resp)]
+            (when (and id_token access_token)
+              (if refresh_token
+                (set-tokens! id_token access_token refresh_token)
+                (set-tokens! id_token access_token)))))))))
 
 (defn restore-tokens-from-localstorage
   "Refresh id-token&access-token, pull latest repos, returns nil when tokens are not available."

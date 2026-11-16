@@ -786,58 +786,10 @@
                          sync-auth/id-token-expired? (fn [_token] true)]
              (-> (#'db-sync/<resolve-ws-token)
                  (p/then (fn [token]
-                           (is (= 1 (count @fetch-calls)))
-                           (is (= 0 @main-thread-calls))
-                           (is (= "fresh-worker-token" token))
-                           (is (= "fresh-worker-token" (worker-state/get-id-token)))
-                           (is (= "fresh-worker-access-token"
-                                  (:auth/access-token @worker-state/*state)))))
-                 (p/catch (fn [error]
-                            (is nil (str error))))
-                 (p/finally (fn []
-                              (set! js/fetch fetch-prev)
-                              (reset! worker-state/*main-thread main-thread-prev)
-                              (reset! worker-state/*state worker-state-prev)
-                              (reset! worker-state/*db-sync-config sync-config-prev)
-                              (done))))))))
-
-(deftest resolve-ws-token-does-not-fallback-to-main-thread-when-feature-flag-disabled-test
-  (async done
-         (let [fetch-calls (atom 0)
-               main-thread-calls (atom 0)
-               main-thread-prev @worker-state/*main-thread
-               worker-state-prev @worker-state/*state
-               sync-config-prev @worker-state/*db-sync-config
-               fetch-prev js/fetch]
-           (reset! worker-state/*db-sync-config {:feature-flags {:worker-auth-refresh? false}})
-           (reset! worker-state/*state (assoc worker-state-prev
-                                              :auth/id-token "expired-token"
-                                              :auth/refresh-token "refresh-token"
-                                              :auth/oauth-token-url "https://auth.example.com/oauth2/token"
-                                              :auth/oauth-client-id "worker-client-id"))
-           (reset! worker-state/*main-thread
-                   (fn [qkw & _args]
-                     (when (= qkw :thread-api/ensure-id&access-token)
-                       (swap! main-thread-calls inc))
-                     (p/resolved {:id-token "fresh-legacy-token"})))
-           (set! js/fetch
-                 (fn [_url _opts]
-                   (swap! fetch-calls inc)
-                   (let [resp (js-obj)]
-                     (aset resp "ok" true)
-                     (aset resp "status" 200)
-                     (aset resp "text"
-                           (fn []
-                             (p/resolved "{\"id_token\":\"fresh-worker-token-2\",\"access_token\":\"fresh-worker-access-token-2\"}")))
-                     (p/resolved resp))))
-           (with-redefs [sync-util/auth-token (fn [] "expired-token")
-                         sync-auth/id-token-expired? (fn [_token] true)]
-             (-> (#'db-sync/<resolve-ws-token)
-                 (p/then (fn [token]
-                           (is (= 1 @fetch-calls))
-                           (is (= 0 @main-thread-calls))
-                           (is (= "fresh-worker-token-2" token))
-                           (is (= "fresh-worker-token-2" (worker-state/get-id-token)))))
+                           (is (= 0 (count @fetch-calls)))
+                           (is (= 1 @main-thread-calls))
+                           (is (= "legacy-token" token))
+                           (is (= "legacy-token" (worker-state/get-id-token)))))
                  (p/catch (fn [error]
                             (is nil (str error))))
                  (p/finally (fn []

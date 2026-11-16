@@ -81,7 +81,7 @@
   (let [token (sync-util/auth-token)
         token-expired? (id-token-expired? token)]
     (if (and (not (sync-util/cli-node-owner?)) token-expired?)
-      (p/let [{:keys [id-token access-token]} (<refresh-id&access-token)]
+      (p/let [{:keys [id-token access-token]} (worker-state/<invoke-main-thread :thread-api/ensure-id&access-token)]
         (when-not (seq id-token)
           (throw (ex-info "worker auth refresh returned empty id-token"
                           {:code :auth-refresh-empty-id-token})))

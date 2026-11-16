@@ -2,6 +2,7 @@
   (:require [clojure.string :as string]
             [electron.deeplink :as deeplink]
             [electron.handler :as handler]
+            [electron.oidc :as oidc]
             [electron.utils :refer [send-to-renderer] :as utils]
             [electron.window :as win]))
 
@@ -98,6 +99,7 @@
       "graph" (local-url-handler window target false)
       "new-window" (local-url-handler window target true)
       "x-callback-url" (x-callback-url-handler window parsed-url)
+      "auth-callback" (oidc/handle-callback! window parsed-url)
       "handbook" (send-when-loaded! window :handbook
                                       {:key (some-> (.-pathname parsed-url) (string/replace-first #"^[\/]+" ""))
                                        :args (some-> (.-searchParams parsed-url) (js/Object.fromEntries))}))))

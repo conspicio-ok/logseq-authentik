@@ -24,6 +24,7 @@
 
 (def COGNITO-CLIENT-ID cognito-config/COGNITO-CLIENT-ID)
 (def OAUTH-DOMAIN cognito-config/OAUTH-DOMAIN)
+(def OAUTH-TOKEN-URL cognito-config/OAUTH-TOKEN-URL)
 
 (def API-DOMAIN "api.logseq.com")
 (def COGNITO-IDP "https://cognito-idp.us-east-1.amazonaws.com/")
